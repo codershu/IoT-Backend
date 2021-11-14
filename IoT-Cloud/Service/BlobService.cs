@@ -33,9 +33,15 @@ namespace IoT_Cloud.Service
 
         public async Task<bool> CreateContainer(string containerName)
         {
-            CloudBlobContainer container = _blockClient.GetContainerReference(containerName);
-            await container.CreateIfNotExistsAsync();
-            return true;
+            try
+            {
+                CloudBlobContainer container = _blockClient.GetContainerReference(containerName);
+                await container.CreateIfNotExistsAsync();
+                return true;
+            }catch(Exception ex)
+            {
+                return false;
+            }
         }
 
         public Task<Response<bool>> DownloadAllBlobsInContainerToFolder(string containerName, string filePath)
@@ -93,6 +99,7 @@ namespace IoT_Cloud.Service
         {
             string tempFolderPath = Path.GetTempPath();
             string newTempFolderPath = tempFolderPath + $"/iot-{Guid.NewGuid()}";
+            location = location.ToLower();
 
             System.IO.Directory.CreateDirectory(newTempFolderPath);
 
@@ -107,7 +114,8 @@ namespace IoT_Cloud.Service
             var existed = IsExistingContainer(location);
             if (!existed.Result)
             {
-                await CreateContainer(location);
+                var created = await CreateContainer(location);
+                if (!created) return false;
             }
             await UploadFileToBlob(fileName, location, filePath);
 
