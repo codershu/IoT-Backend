@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using IoT_Cloud.Interfaces;
+using IoT_Cloud.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -9,18 +12,20 @@ namespace IoT_Cloud.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class WeatherForecastController : ControllerBase
+    public class IoTController : ControllerBase
     {
         private static readonly string[] Summaries = new[]
         {
             "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
         };
 
-        private readonly ILogger<WeatherForecastController> _logger;
+        private readonly ILogger<IoTController> _logger;
+        private readonly IBlobService _blobService;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        public IoTController(ILogger<IoTController> logger, IBlobService blobService)
         {
             _logger = logger;
+            _blobService = blobService;
         }
 
         [HttpGet]
@@ -35,5 +40,26 @@ namespace IoT_Cloud.Controllers
             })
             .ToArray();
         }
+
+
+        [HttpPost("UploadFileToBlob/{location}")]
+        public ActionResult<Response<bool>> UploadFileToBlob(string location)
+        {
+            try
+            {
+                var httpRequest = HttpContext.Request;
+                var uploadFile = httpRequest.Form.Files[0];
+
+                return Ok(_blobService.UploadFile(location, uploadFile).Result);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError($"Failed Upload File: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+
+
     }
 }
