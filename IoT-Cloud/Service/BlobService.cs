@@ -9,6 +9,8 @@ using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Auth;
 using Microsoft.Azure.Storage.Blob;
 using System.IO;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace IoT_Cloud.Service
 {
@@ -72,6 +74,23 @@ namespace IoT_Cloud.Service
             return key;
         }
 
+        public Task<List<Container>> GetAllContainers()
+        {
+            var containers = new List<Container>();
+            var containerList = _blockClient.ListContainers();
+            foreach (var container in containerList)
+            {
+                var c = new Container
+                {
+                    Name = container.Name,
+                    Uri = container.Uri.ToString(),
+                    UpdatedOn = container.Properties.LastModified
+                };
+                containers.Add(c);
+            }
+            return Task.FromResult(containers);
+        }
+
         public Task<bool> IsExistingContainer(string containerName)
         {
             //var found = _blockClient.GetContainerReference(containerName);
@@ -120,6 +139,25 @@ namespace IoT_Cloud.Service
             await UploadFileToBlob(fileName, location, filePath);
 
             return true;
+        }
+
+        public Task<List<BlobFile>> GetAllBlobsInContainer(string containerName)
+        {
+            var result = new List<BlobFile>();
+            CloudBlobContainer container = _blockClient.GetContainerReference(containerName);
+            var blobs = container.ListBlobs().Cast<CloudBlockBlob>();
+            foreach (var blob in blobs)
+            {
+                var b = new BlobFile
+                {
+                    Name = blob.Name,
+                    Uri = blob.Uri.ToString(),
+                    Container = blob.Container.Name,
+                    UpdatedOn = blob.Properties.LastModified
+                };
+                result.Add(b);
+            }
+            return Task.FromResult(result);
         }
     }
 }
