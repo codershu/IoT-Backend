@@ -15,11 +15,6 @@ namespace IoT_Cloud.Controllers
     [Route("[controller]")]
     public class IoTController : ControllerBase
     {
-        private static readonly string[] Summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
-
         private readonly ILogger<IoTController> _logger;
         private readonly IBlobService _blobService;
 
@@ -30,16 +25,9 @@ namespace IoT_Cloud.Controllers
         }
 
         [HttpGet]
-        public IEnumerable<WeatherForecast> Get()
+        public string Get()
         {
-            var rng = new Random();
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            {
-                Date = DateTime.Now.AddDays(index),
-                TemperatureC = rng.Next(-20, 55),
-                Summary = Summaries[rng.Next(Summaries.Length)]
-            })
-            .ToArray();
+            return "Hi! This is IoT Backend Server for course ECE569A";
         }
 
 
